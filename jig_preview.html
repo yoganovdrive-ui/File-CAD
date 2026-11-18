@@ -1,0 +1,48 @@
+<!doctype html>
+<html lang="id">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>JIG Pick-and-Place Tutup Botol</title>
+<style>
+html,body{margin:0;height:100%;overflow:hidden;background:#0d1117;color:#e6edf3;font:14px system-ui,sans-serif}
+header{height:58px;box-sizing:border-box;padding:12px 18px;border-bottom:1px solid #30363d;display:flex;justify-content:space-between;align-items:center}b{font-size:15px}small{color:#8b949e}#v{height:calc(100% - 58px)}#legend{position:absolute;left:16px;bottom:16px;background:#161b22dd;border:1px solid #30363d;border-radius:8px;padding:10px 12px;line-height:1.7;color:#c9d1d9}.dot{display:inline-block;width:10px;height:10px;border-radius:50%;margin-right:6px}.blue{background:#3987d8}.orange{background:#f0883e}.green{background:#3fb950}.gray{background:#8b949e}
+</style>
+<script type="importmap">{"imports":{"three":"https://unpkg.com/three@0.160.0/build/three.module.js","OrbitControls":"https://unpkg.com/three@0.160.0/examples/jsm/controls/OrbitControls.js"}}</script>
+</head>
+<body>
+<header><b>Konsep JIG Pick-and-Place Tutup Botol</b><small>cap Ø28 mm · vacuum pickup · konsep visual</small></header>
+<div id="v"></div>
+<div id="legend"><div><span class="dot blue"></span>Feeding rail + pickup nest</div><div><span class="dot orange"></span>Tutup botol</div><div><span class="dot green"></span>Botol output</div><div><span class="dot gray"></span>Vacuum head / slide</div></div>
+<script type="module">
+import * as T from 'three';import {OrbitControls} from 'OrbitControls';
+const el=document.querySelector('#v'),scene=new T.Scene();scene.background=new T.Color(0x0d1117);
+const cam=new T.PerspectiveCamera(42,el.clientWidth/el.clientHeight,.1,2000);cam.position.set(420,330,460);
+const ren=new T.WebGLRenderer({antialias:true});ren.setSize(el.clientWidth,el.clientHeight);ren.setPixelRatio(devicePixelRatio);el.appendChild(ren.domElement);
+const ctl=new OrbitControls(cam,ren.domElement);ctl.enableDamping=true;ctl.target.set(60,35,0);
+scene.add(new T.HemisphereLight(0xc7ddff,0x202b3a,1.25));const dl=new T.DirectionalLight(0xffffff,2.2);dl.position.set(250,450,280);scene.add(dl);
+const mat=(c,metal=0.15)=>new T.MeshStandardMaterial({color:c,metalness:metal,roughness:.32});
+const blue=mat(0x3987d8,.35),dark=mat(0x26384a,.5),orange=mat(0xf0883e,.15),green=mat(0x3fb950,.1),gray=mat(0x8b949e,.6),white=mat(0xd0d7de,.35);
+function box(name,x,y,z,sx,sy,sz,ma){let m=new T.Mesh(new T.BoxGeometry(sx,sy,sz),ma);m.name=name;m.position.set(x,y,z);scene.add(m);return m}
+function cyl(name,x,y,z,r,h,ma,rot=null){let m=new T.Mesh(new T.CylinderGeometry(r,r,h,48),ma);m.name=name;m.position.set(x,y,z);if(rot)m.rotation.set(...rot);scene.add(m);return m}
+// Base and rail
+box('Base plate',30,0,0,520,24,270,dark);
+box('Feeding rail',-25,28,0,330,16,46,blue);box('Rail guide L',-25,46,-25,330,18,8,white);box('Rail guide R',-25,46,25,330,18,8,white);
+// caps on rail (orange disks)
+for(let x=-155;x<105;x+=42)cyl('Cap',x,49,0,14,7,orange,[Math.PI/2,0,0]);
+// pickup nest and escapement
+box('Pickup nest',150,30,0,72,16,58,blue);box('Stopper',112,50,0,10,30,62,gray);
+cyl('Pickup cap',150,51,0,14,7,orange,[Math.PI/2,0,0]);
+// vertical robot column + horizontal slide
+box('Robot column',240,120,0,28,220,28,gray);box('X slide',175,225,0,180,24,28,gray);box('Z slide',150,175,0,28,110,28,gray);
+// vacuum head
+cyl('Vacuum head',150,113,0,13,34,gray);cyl('Suction cup',150,93,0,18,8,white);
+// Bottle nest and bottle
+box('Bottle nest',150,30,110,80,18,100,blue);cyl('Bottle',150,105,110,40,150,green);cyl('Bottle neck',150,188,110,21,28,green);cyl('Bottle cap target',150,207,110,14,8,orange);
+// bottle guide
+box('Bottle rear guide',150,35,160,90,35,10,white);box('Bottle side guide',195,35,110,10,35,95,white);
+// dimension-ish labels via sprites omitted; grid
+const grid=new T.GridHelper(700,35,0x30363d,0x21262d);grid.position.y=-14;grid.rotation.x=0;scene.add(grid);
+function loop(){requestAnimationFrame(loop);ctl.update();ren.render(scene,cam)}loop();
+addEventListener('resize',()=>{cam.aspect=el.clientWidth/el.clientHeight;cam.updateProjectionMatrix();ren.setSize(el.clientWidth,el.clientHeight)});
+</script></body></html>
